@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import photo from "../assets/1707597386914.jpg";
 
 export default function LastMessage() {
   const [showFullMessage, setShowFullMessage] = useState(false);
@@ -33,11 +34,11 @@ export default function LastMessage() {
         {showPhoto && (
           <div className="text-center mb-6 p-4 bg-white/80 rounded-2xl border-2 border-dashed border-red-300 shadow-lg">
             <img
-              src="/src/assets/1707597386914.jpg"
+              src={photo}
               alt="Our beautiful memory together"
-              className="w-48 h-48 mx-auto mb-3 rounded-2xl object-cover shadow-xl border-2 border-white"
+              className="w-60 h-60 object-cover mx-auto rounded-xl shadow-md"
             />
-            <p className="text-red-700 font-semibold">
+            <p className="text-red-700 font-semibold mt-3">
               A Memory I'll Cherish Forever
             </p>
             <p className="text-red-600 text-sm mt-1">
