@@ -1,32 +1,186 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import photo from "../assets/1707597386914.jpg";
+
+// Import your music files
+import song1 from "../assets/Let Her Go  - Passenger (Grand Piano Cover) - Costantino Carrara.mp3";
+import song2 from "../assets/Main Phir Bhi Tumko Chahunga _ Piano Cover _ Arijit Singh _ Aakash Desai.mp3";
+import song3 from "../assets/Tujhe Bhula Diya __ Relaxing Piano Cover __ Anjaana Anjaani __ Nikhil Sharma __.mp3";
 
 export default function LastMessage() {
   const [showFullMessage, setShowFullMessage] = useState(false);
   const [showPhoto, setShowPhoto] = useState(false);
+  const [currentSong, setCurrentSong] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showMusicPlayer, setShowMusicPlayer] = useState(false);
+  const audioRef = useRef(null);
+
+  const songs = [
+    {
+      title: "Let Her Go",
+      artist: "Passenger (Piano Cover)",
+      file: song1,
+      emotion: "Heartbreak",
+    },
+    {
+      title: "Phir Bhi Tumko Chahunga",
+      artist: "Arijit Singh (Piano Cover)",
+      file: song2,
+      emotion: "Eternal Love",
+    },
+    {
+      title: "Tujhe Bhula Diya",
+      artist: "Anjaana Anjaani (Piano Cover)",
+      file: song3,
+      emotion: "Moving On",
+    },
+  ];
 
   // Show everything immediately with a dramatic entrance
   useEffect(() => {
     const timer1 = setTimeout(() => setShowFullMessage(true), 500);
     const timer2 = setTimeout(() => setShowPhoto(true), 1000);
 
+    // Auto-play music after a short delay
+    const timer3 = setTimeout(() => {
+      setIsPlaying(true);
+    }, 1500);
+
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
+      clearTimeout(timer3);
     };
   }, []);
 
+  // Handle song changes and auto-play
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.load();
+      if (isPlaying) {
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((e) => {
+            console.log("Auto-play failed, user interaction required:", e);
+            setIsPlaying(false);
+          });
+        }
+      }
+    }
+  }, [currentSong, isPlaying]);
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch((e) => console.log("Play failed:", e));
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const nextSong = () => {
+    setCurrentSong((prev) => (prev + 1) % songs.length);
+  };
+
+  const prevSong = () => {
+    setCurrentSong((prev) => (prev - 1 + songs.length) % songs.length);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-100 via-pink-50 to-rose-100 py-4 px-4">
+      {/* Music Player - Improved for Mobile */}
+      <div
+        className={`fixed top-4 left-4 z-50 ${
+          showMusicPlayer ? "block" : "hidden"
+        } md:block`}
+      >
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 md:p-4 shadow-2xl border border-rose-200 max-w-[280px] md:min-w-[300px]">
+          {/* Song Info - Hidden on mobile, visible on desktop */}
+          <div className="hidden md:block text-center mb-3">
+            <h3 className="font-bold text-rose-800 text-sm">
+              {songs[currentSong].title}
+            </h3>
+            <p className="text-rose-600 text-xs">{songs[currentSong].artist}</p>
+            <p className="text-rose-500 text-xs italic">
+              {songs[currentSong].emotion}
+            </p>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="w-full bg-rose-200 rounded-full h-1 mb-3">
+            <div
+              className="bg-rose-500 h-1 rounded-full transition-all duration-1000"
+              style={{ width: isPlaying ? "70%" : "0%" }}
+            ></div>
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={prevSong}
+              className="p-1 md:p-2 text-rose-600 hover:text-rose-800 transition-colors text-lg md:text-base"
+            >
+              ⏮
+            </button>
+
+            <button
+              onClick={togglePlay}
+              className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-rose-500 to-red-500 rounded-full flex items-center justify-center text-white shadow-lg hover:scale-110 transition-transform text-sm md:text-base"
+            >
+              {isPlaying ? "⏸" : "▶"}
+            </button>
+
+            <button
+              onClick={nextSong}
+              className="p-1 md:p-2 text-rose-600 hover:text-rose-800 transition-colors text-lg md:text-base"
+            >
+              ⏭
+            </button>
+          </div>
+
+          {/* Song List - Hidden on mobile */}
+          <div className="hidden md:block mt-3 space-y-1">
+            {songs.map((song, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSong(index)}
+                className={`w-full text-left p-2 rounded-lg text-xs transition-all ${
+                  index === currentSong
+                    ? "bg-rose-500 text-white"
+                    : "bg-rose-100 text-rose-700 hover:bg-rose-200"
+                }`}
+              >
+                {song.title}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Hidden Audio Element */}
+      <audio
+        ref={audioRef}
+        loop
+        onEnded={nextSong}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+      >
+        <source src={songs[currentSong].file} type="audio/mpeg" />
+        Your browser does not support the audio element.
+      </audio>
+
       <div className="max-w-3xl mx-auto">
         {/* Urgent Header */}
         <div className="text-center mb-6">
-          <div className="inline-block bg-white/90 rounded-2xl px-6 py-4 shadow-2xl border-2 border-rose-300 animate-pulse">
-            <h1 className="text-2xl md:text-3xl font-bold text-rose-800 mb-2">
+          <div className="inline-block bg-white/90 rounded-2xl px-4 md:px-6 py-4 shadow-2xl border-2 border-rose-300 animate-pulse">
+            <h1 className="text-xl md:text-3xl font-bold text-rose-800 mb-2">
               💔 PLEASE READ THIS ONCE DEVYANI 💔
             </h1>
             <div className="w-20 h-1 bg-red-500 mx-auto rounded-full mb-2"></div>
-            <p className="text-red-600 font-medium">My final words to you</p>
+            <p className="text-red-600 font-medium text-sm md:text-base">
+              My final words to you
+            </p>
           </div>
         </div>
 
@@ -36,17 +190,16 @@ export default function LastMessage() {
             <img
               src={photo}
               alt="Our beautiful memory together"
-              className="w-60 h-60 object-cover mx-auto rounded-xl shadow-md"
+              className="w-48 h-48 md:w-60 md:h-60 object-cover mx-auto rounded-xl shadow-md"
             />
-            <p className="text-red-700 font-semibold mt-3">
+            <p className="text-red-700 font-semibold mt-3 text-sm md:text-base">
               A Memory I'll Cherish Forever
             </p>
-            <p className="text-red-600 text-sm mt-1">
+            <p className="text-red-600 text-xs md:text-sm mt-1">
               This moment meant everything to me
             </p>
           </div>
         )}
-
         {/* Full Message - Show immediately */}
         {showFullMessage && (
           <div className="bg-white/90 rounded-2xl p-6 shadow-2xl border border-rose-200 mb-6">
@@ -754,14 +907,37 @@ export default function LastMessage() {
 
         {/* Final Emotional Goodbye */}
         {showFullMessage && (
-          <div className="text-center mt-6 p-6 bg-gradient-to-r from-red-500 to-rose-500 rounded-2xl text-white shadow-2xl">
-            <div className="text-4xl mb-4">💔</div>
-            <h2 className="text-2xl font-bold mb-2">THIS WAS MY SOUL</h2>
-            <p className="text-lg opacity-90">
+          <div className="text-center mt-6 p-4 md:p-6 bg-gradient-to-r from-red-500 to-rose-500 rounded-2xl text-white shadow-2xl">
+            <div className="text-3xl md:text-4xl mb-4">💔</div>
+            <h2 className="text-xl md:text-2xl font-bold mb-2">
+              THIS WAS MY SOUL
+            </h2>
+            <p className="text-base md:text-lg opacity-90">
               Not just love... my everything is in these words
             </p>
           </div>
         )}
+      </div>
+
+      {/* Improved Music Toggle for Mobile */}
+      <div className="fixed bottom-4 right-4 z-50 md:hidden">
+        <div className="flex flex-col items-center space-y-2">
+          {/* Toggle player visibility */}
+          <button
+            onClick={() => setShowMusicPlayer(!showMusicPlayer)}
+            className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center text-rose-600 shadow-lg border border-rose-200"
+          >
+            🎵
+          </button>
+
+          {/* Play/Pause button */}
+          <button
+            onClick={togglePlay}
+            className="w-14 h-14 bg-gradient-to-r from-rose-500 to-red-500 rounded-full flex items-center justify-center text-white shadow-2xl hover:scale-110 transition-transform"
+          >
+            {isPlaying ? "⏸" : "▶"}
+          </button>
+        </div>
       </div>
     </div>
   );
